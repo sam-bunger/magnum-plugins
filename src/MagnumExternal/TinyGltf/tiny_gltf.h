@@ -4429,6 +4429,7 @@ static bool ParsePrimitive(Primitive *primitive, Model *model, std::string *err,
   }
 
 #ifdef TINYGLTF_ENABLE_DRACO
+std::cout << "Parsing DRACO extension!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
   auto dracoExtension =
       primitive->extensions.find("KHR_draco_mesh_compression");
   if (dracoExtension != primitive->extensions.end()) {
