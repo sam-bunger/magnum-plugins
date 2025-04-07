@@ -58,6 +58,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #ifndef TINYGLTF_USE_CPP14
 #include <functional>
