@@ -4436,6 +4436,7 @@ std::cout << "Parsing DRACO extension!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
     ParseDracoExtension(primitive, model, err, dracoExtension->second);
   }
 #else
+std::cout << "WE DID NOT PARSE AT ALL!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
   (void)model;
 #endif
 
