@@ -1499,10 +1499,8 @@ class TinyGLTF {
 #endif
 #endif
 
-#ifdef TINYGLTF_ENABLE_DRACO
 #include "draco/compression/decode.h"
 #include "draco/core/decoder_buffer.h"
-#endif
 
 #ifndef TINYGLTF_NO_STB_IMAGE
 #ifndef TINYGLTF_NO_INCLUDE_STB_IMAGE
@@ -4176,8 +4174,6 @@ static bool ParseAccessor(Accessor *accessor, std::string *err, const json &o,
   return true;
 }
 
-#ifdef TINYGLTF_ENABLE_DRACO
-
 static void DecodeIndexBuffer(draco::Mesh *mesh, size_t componentSize,
                               std::vector<uint8_t> &outBuffer) {
   if (componentSize == 4) {
@@ -4366,7 +4362,6 @@ static bool ParseDracoExtension(Primitive *primitive, Model *model,
 
   return true;
 }
-#endif
 
 static bool ParsePrimitive(Primitive *primitive, Model *model, std::string *err,
                            const json &o,
@@ -4429,17 +4424,13 @@ static bool ParsePrimitive(Primitive *primitive, Model *model, std::string *err,
     }
   }
 
-#ifdef TINYGLTF_ENABLE_DRACO
-std::cout << "Parsing DRACO extension!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::cout << "Parsing DRACO extension!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
   auto dracoExtension =
       primitive->extensions.find("KHR_draco_mesh_compression");
   if (dracoExtension != primitive->extensions.end()) {
     ParseDracoExtension(primitive, model, err, dracoExtension->second);
   }
-#else
-std::cout << "WE DID NOT PARSE AT ALL!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-  (void)model;
-#endif
+
 
   return true;
 }
