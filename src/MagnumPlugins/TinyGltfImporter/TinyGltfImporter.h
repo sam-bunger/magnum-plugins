@@ -577,7 +577,4 @@ class MAGNUM_TINYGLTFIMPORTER_EXPORT TinyGltfImporter: public AbstractImporter {
 };
 
 }}
-#else
-#error use MagnumPlugins/GltfImporter/GltfImporter.h and the GltfImporter class instead
-#endif
 
