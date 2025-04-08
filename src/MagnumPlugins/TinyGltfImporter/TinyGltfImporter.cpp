@@ -1308,9 +1308,12 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
        have all fields present, with some being empty, but this gives less
        noise for asset introspection purposes. */
     Containers::Array<SceneFieldData> fields;
-    /* Field for node extras, using custom ID 0 */
-    /* Use custom field ID 0 for NodeExtras */
-    const SceneField nodeExtrasField = sceneFieldCustom(0);
+    
+    /* Define a custom field for node extras - use a reasonably unique ID */
+    /* We'll use 0x6e786272 which is ASCII for 'nxtr' (node extras) to avoid conflicts */
+    constexpr UnsignedInt NodeExtrasId = 0x6e787472;
+    const SceneField nodeExtrasField = sceneFieldCustom(NodeExtrasId);
+    
     arrayAppend(fields, {
         /** @todo once there's a flag to annotate implicit fields, omit the
             parent field if it's all -1s; or alternatively we could also have a
