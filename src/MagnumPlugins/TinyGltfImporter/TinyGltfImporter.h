@@ -578,3 +578,4 @@ class MAGNUM_TINYGLTFIMPORTER_EXPORT TinyGltfImporter: public AbstractImporter {
 
 }}
 
+#endif
