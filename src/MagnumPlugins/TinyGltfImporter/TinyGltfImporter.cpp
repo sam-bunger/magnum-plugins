@@ -237,9 +237,6 @@ struct TinyGltfImporter::Document {
 
     UnsignedInt imageImporterId = ~UnsignedInt{};
     Containers::Optional<AnyImageImporter> imageImporter;
-
-    /* Container to store serialized JSON strings for node extras */
-    Containers::Array<Containers::String> nodeExtrasStrings;
 };
 
 /* LCOV_EXCL_START, the whole plugin is deprecated but direct construction in
@@ -1124,7 +1121,7 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
     Containers::ArrayView<UnsignedInt> skinObjects;
     Containers::ArrayView<UnsignedInt> skins;
     Containers::ArrayView<UnsignedInt> extrasObjects;
-    Containers::ArrayView<Containers::StringView> extrasData;
+    Containers::ArrayView<const void*> extrasData;
     Containers::Array<char> data = Containers::ArrayTuple{
         {NoInit, objects.size(), parentImporterStateObjects},
         {NoInit, objects.size(), parents},
@@ -1313,7 +1310,7 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
     Containers::Array<SceneFieldData> fields;
     
     /* Define a custom field for node extras - use a reasonably unique ID */
-    /* We'll use 0x6e787472 which is ASCII for 'nxtr' (node extras) to avoid conflicts */
+    /* We'll use 0x6e786272 which is ASCII for 'nxtr' (node extras) to avoid conflicts */
     constexpr UnsignedInt NodeExtrasId = 0x6e787472;
     const SceneField nodeExtrasField = sceneFieldCustom(NodeExtrasId);
     
