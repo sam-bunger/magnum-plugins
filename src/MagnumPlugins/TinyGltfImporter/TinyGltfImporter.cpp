@@ -29,8 +29,6 @@
 #include "TinyGltfImporter.h"
 
 #include <cctype>
-#include <limits>
-#include <unordered_map>
 #include <Corrade/Containers/GrowableArray.h>
 #include <Corrade/Containers/ArrayTuple.h>
 #include <Corrade/Containers/ArrayView.h>
@@ -1044,6 +1042,7 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
        light, camera and skin assignment count. Materials have to use the same
        object mapping as meshes, so only check if there's any material
        assignment at all -- if not, then we won't need to store that field. */
+    /* Count nodes with non-null extras data */
     UnsignedInt transformationCount = 0;
     UnsignedInt trsCount = 0;
     bool hasTranslations = false;
@@ -1054,6 +1053,7 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
     UnsignedInt lightCount = 0;
     UnsignedInt cameraCount = 0;
     UnsignedInt skinCount = 0;
+    UnsignedInt extrasCount = 0;
     for(const UnsignedInt i: objects) {
         const tinygltf::Node& node = _d->model.nodes[i];
 
@@ -1090,6 +1090,11 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
         if(node.extensions.find("KHR_lights_punctual") != node.extensions.end()) {
             ++lightCount;
         }
+
+        /* Check for non-null extras */
+        if(node.extras.Type() != tinygltf::NULL_TYPE) {
+            ++extrasCount;
+        }
     }
 
     /* If all objects that have transformations have TRS as well, no need to
@@ -1115,6 +1120,8 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
     Containers::ArrayView<UnsignedInt> cameras;
     Containers::ArrayView<UnsignedInt> skinObjects;
     Containers::ArrayView<UnsignedInt> skins;
+    Containers::ArrayView<UnsignedInt> extrasObjects;
+    Containers::ArrayView<const void*> extrasData;
     Containers::Array<char> data = Containers::ArrayTuple{
         {NoInit, objects.size(), parentImporterStateObjects},
         {NoInit, objects.size(), parents},
@@ -1133,7 +1140,9 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
         {NoInit, cameraCount, cameraObjects},
         {NoInit, cameraCount, cameras},
         {NoInit, skinCount, skinObjects},
-        {NoInit, skinCount, skins}
+        {NoInit, skinCount, skins},
+        {NoInit, extrasCount, extrasObjects},
+        {NoInit, extrasCount, extrasData}
     };
 
     /* Populate object mapping for parents and importer state, synthesize
@@ -1152,6 +1161,7 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
     std::size_t lightOffset = 0;
     std::size_t cameraOffset = 0;
     std::size_t skinOffset = 0;
+    std::size_t extrasOffset = 0;
     for(std::size_t i = 0; i != objects.size(); ++i) {
         const tinygltf::Node& node = _d->model.nodes[objects[i]];
 
@@ -1276,6 +1286,13 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
             skins[skinOffset] = node.skin;
             ++skinOffset;
         }
+
+        /* Populate extras references */
+        if(node.extras.Type() != tinygltf::NULL_TYPE) {
+            extrasObjects[extrasOffset] = objects[i];
+            extrasData[extrasOffset] = &node.extras;
+            ++extrasOffset;
+        }
     }
 
     CORRADE_INTERNAL_ASSERT(
@@ -1285,11 +1302,15 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
         lightOffset == lightObjects.size() &&
         cameraOffset == cameraObjects.size() &&
         skinOffset == skinObjects.size());
+        skinOffset == skinObjects.size() &&
+        extrasOffset == extrasObjects.size());
 
     /* Put everything together. For simplicity the imported data could always
        have all fields present, with some being empty, but this gives less
        noise for asset introspection purposes. */
     Containers::Array<SceneFieldData> fields;
+    /* Field for node extras */
+    const SceneField nodeExtrasField = sceneFieldCustom("NodeExtras");
     arrayAppend(fields, {
         /** @todo once there's a flag to annotate implicit fields, omit the
             parent field if it's all -1s; or alternatively we could also have a
@@ -1330,6 +1351,9 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
     });
     if(skinCount) arrayAppend(fields, SceneFieldData{
         SceneField::Skin, skinObjects, skins
+    });
+    if(extrasCount) arrayAppend(fields, SceneFieldData{
+        nodeExtrasField, extrasObjects, extrasData
     });
 
     /* Convert back to the default deleter to avoid dangling deleter function
