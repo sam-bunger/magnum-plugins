@@ -1292,12 +1292,8 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
 
         /* Populate extras references */
         if(node.extras.Type() != tinygltf::NULL_TYPE) {
-            /* Serialize the extras to JSON */
-            Containers::String extrasJson = tinygltf::JsonToString(node.extras);
-            arrayAppend(_d->nodeExtrasStrings, std::move(extrasJson));
-            
             extrasObjects[extrasOffset] = objects[i];
-            extrasData[extrasOffset] = _d->nodeExtrasStrings.back();
+            extrasData[extrasOffset] = &node.extras;
             ++extrasOffset;
         }
     }
