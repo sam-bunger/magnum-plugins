@@ -212,6 +212,12 @@ Import of morph data is not supported at the moment.
     warning and normalizes it. Can be disabled per-object with the
     @cb{.ini} normalizeQuaternions @ce
     @ref Trade-TinyGltfImporter-configuration "configuration option".
+-   If a node contains a non-empty `extras` field, a custom scene field
+    named `"NodeExtras"` (@ref sceneFieldCustom(0), of type
+    @ref SceneFieldType::Pointer pointing to `tinygltf::Value`) is present.
+    The field contains pointers to the `tinygltf::Value` object for each node
+    that has extras defined. See @ref Trade-TinyGltfImporter-state for how
+    to access the `tinygltf::Value` definition.
 
 @subsection Trade-TinyGltfImporter-behavior-animations Animation and skin import
 

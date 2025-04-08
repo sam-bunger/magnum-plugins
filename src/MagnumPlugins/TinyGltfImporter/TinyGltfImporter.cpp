@@ -1301,7 +1301,6 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
         meshMaterialOffset == meshMaterialObjects.size() &&
         lightOffset == lightObjects.size() &&
         cameraOffset == cameraObjects.size() &&
-        skinOffset == skinObjects.size());
         skinOffset == skinObjects.size() &&
         extrasOffset == extrasObjects.size());
 
@@ -1309,8 +1308,9 @@ Containers::Optional<SceneData> TinyGltfImporter::doScene(UnsignedInt id) {
        have all fields present, with some being empty, but this gives less
        noise for asset introspection purposes. */
     Containers::Array<SceneFieldData> fields;
-    /* Field for node extras */
-    const SceneField nodeExtrasField = sceneFieldCustom("NodeExtras");
+    /* Field for node extras, using custom ID 0 */
+    /* Use custom field ID 0 for NodeExtras */
+    const SceneField nodeExtrasField = sceneFieldCustom(0);
     arrayAppend(fields, {
         /** @todo once there's a flag to annotate implicit fields, omit the
             parent field if it's all -1s; or alternatively we could also have a
