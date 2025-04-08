@@ -26,8 +26,6 @@
     DEALINGS IN THE SOFTWARE.
 */
 
-#define _MAGNUM_NO_DEPRECATED_TINYGLTFIMPORTER /* So it doesn't yell here */
-
 #include "TinyGltfImporter.h"
 
 #include <cctype>
@@ -1770,9 +1768,8 @@ Containers::Optional<MeshData> TinyGltfImporter::doMesh(const UnsignedInt id, Un
 
     /* First pass: gather buffer information for each attribute */
     std::size_t totalVertexDataSize = 0;
-    for(std::size_t i = 0; i != attributeData.size(); ++i) {
-        const std::pair<const std::string, int>& attributePair = 
-            primitive.attributes[i];
+    std::size_t i = 0;
+    for(const auto& attributePair : primitive.attributes) {
         const tinygltf::Accessor& accessor = 
             _d->model.accessors[attributePair.second];
         const tinygltf::BufferView& bufferView = 
@@ -1787,6 +1784,7 @@ Containers::Optional<MeshData> TinyGltfImporter::doMesh(const UnsignedInt id, Un
         /* Align to 4 bytes for each attribute */
         totalVertexDataSize = (totalVertexDataSize + 3) & ~std::size_t(3);
         totalVertexDataSize += attributeBufferInfo[i].byteLength;
+        i++;
     }
 
     /* Allocate vertex data with sufficient size for all attributes */
@@ -1794,7 +1792,7 @@ Containers::Optional<MeshData> TinyGltfImporter::doMesh(const UnsignedInt id, Un
 
     /* Second pass: copy data for each attribute and update offsets */
     std::size_t currentOffset = 0;
-    for(std::size_t i = 0; i != attributeData.size(); ++i) {
+    for(i = 0; i < attributeData.size(); ++i) {
         /* Align to 4 bytes */
         currentOffset = (currentOffset + 3) & ~std::size_t(3);
         
