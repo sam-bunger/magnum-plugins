@@ -1731,13 +1731,16 @@ Containers::Optional<MeshData> TinyGltfImporter::doMesh(const UnsignedInt id, Un
             bufferRange = Math::Range1D<std::size_t>::fromSize(bufferView.byteOffset, bufferView.byteLength);
             vertexCount = accessor.count;
         } else {
-            /* ... and probably never will be */
+            /* Instead of rejecting meshes spanning multiple buffers, track separate
+               buffer ranges for each buffer ID and merge them at the end */
             if(std::size_t(bufferView.buffer) != bufferId) {
-                Error{} << "Trade::TinyGltfImporter::mesh(): meshes spanning multiple buffers are not supported";
-                return Containers::NullOpt;
+                /* Expand buffer range to cover both the original and the new buffer */
+                const auto newRange = Math::Range1D<std::size_t>::fromSize(
+                    bufferView.byteOffset, bufferView.byteLength);
+                bufferRange = Math::join(bufferRange, newRange);
+            } else {
+                bufferRange = Math::join(bufferRange, Math::Range1D<std::size_t>::fromSize(bufferView.byteOffset, bufferView.byteLength));
             }
-
-            bufferRange = Math::join(bufferRange, Math::Range1D<std::size_t>::fromSize(bufferView.byteOffset, bufferView.byteLength));
 
             if(accessor.count != vertexCount) {
                 Error{} << "Trade::TinyGltfImporter::mesh(): mismatched vertex count for attribute" << attribute.first << Debug::nospace << ", expected" << vertexCount << "but got" << accessor.count;
@@ -1757,27 +1760,64 @@ Containers::Optional<MeshData> TinyGltfImporter::doMesh(const UnsignedInt id, Un
     /* Verify we really filled all attributes */
     CORRADE_INTERNAL_ASSERT(attributeId == attributeData.size());
 
-    /* Allocate & copy vertex data (if any) */
-    Containers::Array<char> vertexData{NoInit, bufferRange.size()};
-    if(vertexData.size()) Utility::copy(Containers::arrayCast<const char>(
-        Containers::arrayView(_d->model.buffers[bufferId].data)
-            .slice(bufferRange.min(), bufferRange.max())),
-        vertexData);
+    /* Track buffer information for each attribute */
+    struct BufferInfo {
+        std::size_t bufferId;
+        std::size_t byteOffset;
+        std::size_t byteLength;
+    };
+    Containers::Array<BufferInfo> attributeBufferInfo{attributeData.size()};
 
-    /* Convert the attributes from relative to absolute, copy them to a
-       non-growable array and do additional patching */
+    /* First pass: gather buffer information for each attribute */
+    std::size_t totalVertexDataSize = 0;
     for(std::size_t i = 0; i != attributeData.size(); ++i) {
-        Containers::StridedArrayView1D<char> data{vertexData,
-            /* Offset is what with the range min subtracted, as we copied
-               without the prefix */
-            vertexData + attributeData[i].offset(vertexData) - bufferRange.min(),
-            vertexCount, attributeData[i].stride()};
+        const std::pair<const std::string, int>& attributePair = 
+            primitive.attributes[i];
+        const tinygltf::Accessor& accessor = 
+            _d->model.accessors[attributePair.second];
+        const tinygltf::BufferView& bufferView = 
+            _d->model.bufferViews[accessor.bufferView];
+        
+        attributeBufferInfo[i] = {
+            std::size_t(bufferView.buffer),
+            bufferView.byteOffset + accessor.byteOffset,
+            vertexFormatSize(attributeData[i].format()) * vertexCount
+        };
+        
+        /* Align to 4 bytes for each attribute */
+        totalVertexDataSize = (totalVertexDataSize + 3) & ~std::size_t(3);
+        totalVertexDataSize += attributeBufferInfo[i].byteLength;
+    }
 
+    /* Allocate vertex data with sufficient size for all attributes */
+    Containers::Array<char> vertexData{NoInit, totalVertexDataSize};
+
+    /* Second pass: copy data for each attribute and update offsets */
+    std::size_t currentOffset = 0;
+    for(std::size_t i = 0; i != attributeData.size(); ++i) {
+        /* Align to 4 bytes */
+        currentOffset = (currentOffset + 3) & ~std::size_t(3);
+        
+        /* Copy data from the appropriate buffer */
+        const std::size_t bufferId = attributeBufferInfo[i].bufferId;
+        const std::size_t byteOffset = attributeBufferInfo[i].byteOffset;
+        const std::size_t byteLength = attributeBufferInfo[i].byteLength;
+        
+        Utility::copy(
+            Containers::arrayCast<const char>(
+                Containers::arrayView(_d->model.buffers[bufferId].data)
+                    .slice(byteOffset, byteOffset + byteLength)),
+            vertexData.slice(currentOffset, currentOffset + byteLength));
+        
+        /* Update attribute to point to the new location */
+        Containers::StridedArrayView1D<char> data{vertexData,
+            vertexData.data() + currentOffset,
+            vertexCount, attributeData[i].stride()};
+        
         attributeData[i] = MeshAttributeData{attributeData[i].name(),
             attributeData[i].format(), data};
-
-        /* Flip Y axis of texture coordinates, unless it's done in the material
-           instead */
+        
+        /* Handle texture coordinate Y-flipping if needed */
         if(attributeData[i].name() == MeshAttribute::TextureCoordinates && !_d->textureCoordinateYFlipInMaterial) {
            if(attributeData[i].format() == VertexFormat::Vector2)
                 for(auto& c: Containers::arrayCast<Vector2>(data))
@@ -1788,20 +1828,9 @@ Containers::Optional<MeshData> TinyGltfImporter::doMesh(const UnsignedInt id, Un
             else if(attributeData[i].format() == VertexFormat::Vector2usNormalized)
                 for(auto& c: Containers::arrayCast<Vector2us>(data))
                     c.y() = 65535 - c.y();
-            /* For these it's always done in the material texture transform as
-               we can't do a 1 - y flip like above. These are allowed only by
-               the KHR_mesh_quantization formats and in that case the texture
-               transform should be always present. */
-            /* LCOV_EXCL_START */
-            else if(attributeData[i].format() != VertexFormat::Vector2bNormalized &&
-                    attributeData[i].format() != VertexFormat::Vector2sNormalized &&
-                    attributeData[i].format() != VertexFormat::Vector2ub &&
-                    attributeData[i].format() != VertexFormat::Vector2b &&
-                    attributeData[i].format() != VertexFormat::Vector2us &&
-                    attributeData[i].format() != VertexFormat::Vector2s)
-                CORRADE_INTERNAL_ASSERT_UNREACHABLE();
-            /* LCOV_EXCL_STOP */
         }
+        
+        currentOffset += byteLength;
     }
 
     /* Indices */

@@ -4424,13 +4424,11 @@ static bool ParsePrimitive(Primitive *primitive, Model *model, std::string *err,
     }
   }
 
-  std::cout << "Parsing DRACO extension!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
   auto dracoExtension =
       primitive->extensions.find("KHR_draco_mesh_compression");
   if (dracoExtension != primitive->extensions.end()) {
     ParseDracoExtension(primitive, model, err, dracoExtension->second);
   }
-
 
   return true;
 }

@@ -37,16 +37,11 @@
 
 #include <Magnum/configure.h>
 
-#ifdef MAGNUM_BUILD_DEPRECATED
 #include <Corrade/Utility/Macros.h>
 #include <Magnum/Trade/AbstractImporter.h>
 #include <Magnum/Trade/PhongMaterialData.h>
 
 #include "MagnumPlugins/TinyGltfImporter/configure.h"
-
-#ifndef _MAGNUM_NO_DEPRECATED_TINYGLTFIMPORTER
-CORRADE_DEPRECATED_FILE("use MagnumPlugins/GltfImporter/GltfImporter.h and the GltfImporter class instead")
-#endif
 
 #ifndef DOXYGEN_GENERATING_OUTPUT
 namespace tinygltf {
@@ -474,7 +469,7 @@ this:
 #include <MagnumExternal/TinyGLTF/tiny_gltf.h>
 @endcode
 */
-class CORRADE_DEPRECATED("use GltfImporter instead") MAGNUM_TINYGLTFIMPORTER_EXPORT TinyGltfImporter: public AbstractImporter {
+class MAGNUM_TINYGLTFIMPORTER_EXPORT TinyGltfImporter: public AbstractImporter {
     public:
         /**
          * @brief Default constructor
@@ -586,4 +581,3 @@ class CORRADE_DEPRECATED("use GltfImporter instead") MAGNUM_TINYGLTFIMPORTER_EXP
 #error use MagnumPlugins/GltfImporter/GltfImporter.h and the GltfImporter class instead
 #endif
 
-#endif
