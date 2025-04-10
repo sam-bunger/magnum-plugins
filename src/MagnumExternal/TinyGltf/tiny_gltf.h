@@ -2312,6 +2312,8 @@ bool WriteImageData(const std::string *basepath, const std::string *filename,
   std::string header;
   std::vector<unsigned char> data;
 
+    std::cout << "Parsing image with format: " << ext << std::endl;
+
   if (ext == "png") {
     if ((image->bits != 8) ||
         (image->pixel_type != TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)) {
@@ -2340,7 +2342,7 @@ bool WriteImageData(const std::string *basepath, const std::string *filename,
     }
     header = "data:image/bmp;base64,";
   } else if (!embedImages) {
-    // Error: can't output requested format to file
+    std::cout << "Unknown image format: " << ext << std::endl;
     return false;
   }
 
