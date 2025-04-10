@@ -1417,6 +1417,7 @@ class TinyGLTF {
 
 #endif  // TINY_GLTF_H_
 
+#if defined(TINYGLTF_IMPLEMENTATION) || defined(__INTELLISENSE__)
 #include <algorithm>
 //#include <cassert>
 #ifndef TINYGLTF_NO_FS
@@ -2313,7 +2314,7 @@ bool WriteImageData(const std::string *basepath, const std::string *filename,
   std::string header;
   std::vector<unsigned char> data;
 
-    std::cout << "Parsing image with format: " << ext << std::endl;
+    std::cout << "Parsing image with: " << ext << std::endl;
 
   if (ext == "png") {
     if ((image->bits != 8) ||
@@ -2628,6 +2629,7 @@ static void UpdateImageObject(Image &image, std::string &baseDir, int index,
     // Fallback to index of image as filename
     filename = std::to_string(index) + "." + ext;
   }
+
   std::cout << "Image[" << index << "] : " << filename << " . " << ext << std::endl;
 
   // If callback is set, modify image data object
@@ -7426,3 +7428,4 @@ bool TinyGLTF::WriteGltfSceneToFile(Model *model, const std::string &filename,
 #pragma clang diagnostic pop
 #endif
 
+#endif  // TINYGLTF_IMPLEMENTATION
