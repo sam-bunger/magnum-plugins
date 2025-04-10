@@ -5677,6 +5677,7 @@ bool TinyGLTF::LoadFromString(Model *model, std::string *err, std::string *warn,
         return false;
       }
       Image image;
+      std::cout << "PARSING IMAGE JSON: " << o.dump() << std::endl;
       if (!ParseImage(&image, idx, err, warn, o,
                       store_original_json_for_extras_and_extensions_, base_dir,
                       &fs, &this->LoadImageData, load_image_user_data_)) {
