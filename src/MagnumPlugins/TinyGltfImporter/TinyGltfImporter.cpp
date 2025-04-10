@@ -101,7 +101,6 @@ using namespace Magnum::Math::Literals;
 namespace {
 
 bool loadImageData(tinygltf::Image* image, const int, std::string*, std::string*, int, int, const unsigned char* data, int size, void*) {
-    std::cout << "!!!!!!!!!!!!!!!!!!Loading image data: " << image->mimeType << std::endl;
     /* In case the image is an embedded URI, copy its decoded value to the data
        buffer. In all other cases we'll access the referenced buffer or
        external file directly from the doImage2D() implementation. */
@@ -2473,13 +2472,11 @@ Containers::Optional<TextureData> TinyGltfImporter::doTexture(const UnsignedInt 
     }
 
     if(imageId == ~0u) {
-        std::cout << "LOOKING FOR TEXTURE EXTENSIONS " << tex.extensions.size() << std::endl;
          /* WebP extension */
         auto webpIt = tex.extensions.find("EXT_texture_webp");
         if(webpIt != tex.extensions.end()) {
             // Modify the model directly instead of the const reference
             _d->model.textures[id].source = webpIt->second.Get("source").Get<int>();
-            std::cout << "WEBP FOUND, NEW SOURCE " << _d->model.textures[id].source << std::endl;
         }
         /* If not overwritten by an extension, use the standard 'source'
            attribute. It's not mandatory, so this can still fail. */
