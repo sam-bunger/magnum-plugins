@@ -2476,9 +2476,10 @@ Containers::Optional<TextureData> TinyGltfImporter::doTexture(const UnsignedInt 
         std::cout << "LOOKING FOR TEXTURE EXTENSIONS " << tex.extensions.size() << std::endl;
          /* WebP extension */
         auto webpIt = tex.extensions.find("EXT_texture_webp");
-        if (webpIt != tex.extensions.end()) {
-            tex.source = webpIt->second.Get("source").Get<int>();
-            std::cout << "WEBP FOUND, NEW SOURCE " << tex.source << std::endl;
+        if(webpIt != tex.extensions.end()) {
+            // Modify the model directly instead of the const reference
+            _d->model.textures[id].source = webpIt->second.Get("source").Get<int>();
+            std::cout << "WEBP FOUND, NEW SOURCE " << _d->model.textures[id].source << std::endl;
         }
         /* If not overwritten by an extension, use the standard 'source'
            attribute. It's not mandatory, so this can still fail. */
