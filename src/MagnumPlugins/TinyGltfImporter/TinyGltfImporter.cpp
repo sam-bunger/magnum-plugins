@@ -28,6 +28,7 @@
 
 #include "TinyGltfImporter.h"
 
+#include <iostream>
 #include <cctype>
 #include <Corrade/Containers/GrowableArray.h>
 #include <Corrade/Containers/ArrayTuple.h>
@@ -100,6 +101,7 @@ using namespace Magnum::Math::Literals;
 namespace {
 
 bool loadImageData(tinygltf::Image* image, const int, std::string*, std::string*, int, int, const unsigned char* data, int size, void*) {
+    std::cout << "!!!!!!!!!!!!!!!!!!Loading image data: " << image->mimeType << std::endl;
     /* In case the image is an embedded URI, copy its decoded value to the data
        buffer. In all other cases we'll access the referenced buffer or
        external file directly from the doImage2D() implementation. */
