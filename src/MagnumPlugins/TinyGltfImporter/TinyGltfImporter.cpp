@@ -2475,8 +2475,9 @@ Containers::Optional<TextureData> TinyGltfImporter::doTexture(const UnsignedInt 
     if(imageId == ~0u) {
         std::cout << "LOOKING FOR TEXTURE EXTENSIONS " << tex.extensions.size() << std::endl;
          /* WebP extension */
-        if (tex.extensions.find("EXT_texture_webp") != tex.extensions.end()) {
-            tex.source = tex.extensions["EXT_texture_webp"].Get("source").Get<int>();
+        auto webpIt = tex.extensions.find("EXT_texture_webp");
+        if (webpIt != tex.extensions.end()) {
+            tex.source = webpIt->second.Get("source").Get<int>();
             std::cout << "WEBP FOUND, NEW SOURCE " << tex.source << std::endl;
         }
         /* If not overwritten by an extension, use the standard 'source'
