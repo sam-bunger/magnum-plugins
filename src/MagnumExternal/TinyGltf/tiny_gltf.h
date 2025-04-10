@@ -5740,6 +5740,7 @@ bool TinyGLTF::LoadFromString(Model *model, std::string *err, std::string *warn,
         }
         return false;
       }
+      std::cout << "Printing object as string: " << o.dump() << std::endl;
       Texture texture;
       if (!ParseTexture(&texture, err, o,
                         store_original_json_for_extras_and_extensions_,
