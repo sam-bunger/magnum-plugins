@@ -1417,7 +1417,6 @@ class TinyGLTF {
 
 #endif  // TINY_GLTF_H_
 
-#if defined(TINYGLTF_IMPLEMENTATION) || defined(__INTELLISENSE__)
 #include <algorithm>
 //#include <cassert>
 #ifndef TINYGLTF_NO_FS
@@ -2200,6 +2199,8 @@ bool LoadImageData(Image *image, const int image_idx, std::string *err,
 
   int w = 0, h = 0, comp = 0, req_comp = 0;
 
+  std::cout << "LOAD IMAGE: " << image->name << " " << image->width << " " << image->height << " " image->mimeType << " " << image->uri << std::endl;
+
   unsigned char *data = nullptr;
 
   // force 32-bit textures for common Vulkan compatibility. It appears that
@@ -2627,6 +2628,7 @@ static void UpdateImageObject(Image &image, std::string &baseDir, int index,
     // Fallback to index of image as filename
     filename = std::to_string(index) + "." + ext;
   }
+  std::cout << "Image[" << index << "] : " << filename << " . " << ext << std::endl;
 
   // If callback is set, modify image data object
   if (*WriteImageData != nullptr) {
@@ -7423,4 +7425,3 @@ bool TinyGLTF::WriteGltfSceneToFile(Model *model, const std::string &filename,
 #pragma clang diagnostic pop
 #endif
 
-#endif  // TINYGLTF_IMPLEMENTATION
